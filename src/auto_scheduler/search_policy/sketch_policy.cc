@@ -398,8 +398,16 @@ Array<State> SketchPolicyNode::SampleInitPopulation(const Array<State>& sketches
   std::unordered_set<std::string> explored_state_strs;
   size_t iter = 1;
   size_t unchange_cnt = 0;
+
+
+
   while (static_cast<int>(out_states.size()) < sample_init_min_pop_) {
     std::vector<State> temp_states(population);
+
+
+
+    // 원본
+    // ---------------------------------------------------------------------
 
     // Sample a batch of states randomly
     support::parallel_for(0, population, [this, &temp_states, &sketches, &rand_gens](int index) {
@@ -418,6 +426,98 @@ Array<State> SketchPolicyNode::SampleInitPopulation(const Array<State>& sketches
         temp_states[index] = std::move(tmp_s);
       }
     });
+
+
+
+
+
+    // ---------------------------------------------------------------------
+
+
+
+    
+
+    // 실험용
+    // ======================================================================
+  //   State tmp_s = sketches[0];
+  //   bool valid = true;
+  //   for (int index = 0 ; index < 10; index++){
+  //     for (size_t i = 0; i < init_rules.size()-1; ++i) {
+  //       auto& rule = init_rules[i];
+  //       auto rule_ap = rule->Apply(this, &tmp_s, &rand_gens[index]);
+  //       std::cout << "\nrule " << i << ": " << (rule_ap == PopulationGenerationRule::ResultKind::kValid ? "kValid" : "kInvalid") << "\n";
+  //       if (rule_ap == PopulationGenerationRule::ResultKind::kValid) {
+  //         std::cout << "Valid Rule " << i << ": " << tmp_s.ToStr() << "\n" << std::endl;
+  //         std::cout << "" << std::endl;
+  //       }
+  //       // std::cout << tmp_s.ToStr() << std::endl;
+  //       if (rule_ap == PopulationGenerationRule::ResultKind::kInvalid) {
+  //         std::cout << "Invalid Rule " << i << ": " << tmp_s.ToStr() << "\n" << std::endl;
+  //         std::cout << "" << std::endl;
+  //         valid = false;
+  //       }
+  //     }
+  //     if (valid) {
+  //       temp_states[index] = std::move(tmp_s);
+        
+  //     }
+  // }
+    
+  //   auto r0 = init_rules[0]->Apply(this, &tmp_s, &rand_gens[0]);
+  //   std::cout << "rule0: " << (r0 == PopulationGenerationRule::ResultKind::kValid ? "kValid" : "kInvalid") << "\n";
+  //   std::cout << tmp_s.ToStr() << std::endl;
+    
+  //   for (int i  = 0; i < 10 ; i++) {
+  //     auto r1 = init_rules[1]->Apply(this, &tmp_s, &rand_gens[0]);
+  //     std::cout << "rule1: " << (r1 == PopulationGenerationRule::ResultKind::kValid ? "kValid" : "kInvalid") << "\n";
+  //     std::cout << tmp_s.ToStr() << std::endl;
+  //   }
+
+
+    
+    
+  //   auto r2 = init_rules[2]->Apply(this, &tmp_s, &rand_gens[2]);
+  //   std::cout << "rule2: " << (r2 == PopulationGenerationRule::ResultKind::kValid ? "kValid" : "kInvalid") << "\n";
+  //   std::cout << tmp_s.ToStr() << std::endl;
+
+
+
+  //   // Sample a batch of states randomly
+  //   support::parallel_for(0, population, [this, &temp_states, &sketches, &rand_gens](int index) {
+  //     // Randomly choose a sketch
+  //     State tmp_s = sketches[(rand_gens[index])() % sketches.size()];
+  //     // Apply random annotation rules one by one
+  //     bool valid = true;
+  //     for (size_t i = 0; i < init_rules.size(); ++i) {
+  //       auto& rule = init_rules[i];
+  //       auto rule_ap = rule->Apply(this, &tmp_s, &rand_gens[index]);
+  //       std::cout << "\nrule " << i << ": " << (rule_ap == PopulationGenerationRule::ResultKind::kValid ? "kValid" : "kInvalid") << "\n";
+  //       if (rule_ap == PopulationGenerationRule::ResultKind::kValid && i == 1) {
+  //         std::cout << "Valid Rule " << i << ": " << tmp_s.ToStr() << "\n" << std::endl;
+  //         std::cout << "" << std::endl;
+  //       }
+  //       // std::cout << tmp_s.ToStr() << std::endl;
+  //       if (rule_ap == PopulationGenerationRule::ResultKind::kInvalid && i == 1) {
+  //         std::cout << "Invalid Rule " << i << ": " << tmp_s.ToStr() << "\n" << std::endl;
+  //         std::cout << "" << std::endl;
+  //         valid = false;
+  //         break;
+  //       }
+  //     }
+  //     if (valid) {
+  //       temp_states[index] = std::move(tmp_s);
+  //     }
+  //   });
+
+    // ======================================================================
+
+
+
+
+
+
+
+
 
     // Filter out the states that were failed to apply initial rules
     Array<State> cand_states;

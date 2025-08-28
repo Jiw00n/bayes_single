@@ -955,6 +955,7 @@ Pass LowerTensorExpr(TECompiler compiler, ProcessFn process_fn, CompilationConfi
   runtime::TypedPackedFunc<Function(Function, IRModule, PassContext)> pass_func =
       [=](Function func, IRModule module, PassContext ctx) {
         LowerTensorExprMutator lower_te(module, process_fn, config, compiler);
+        auto mutated_func = lower_te.Mutate(func);
         return Downcast<Function>(lower_te.Mutate(func));
       };
   return CreateFunctionPass(pass_func, 0, "LowerTensorExpr", {});

@@ -1510,3 +1510,8 @@ def CollagePartition(config, cost_estimator=None):
 def DivToMul():
     """Transform division by a constant to multiplication by the inverse of the constant"""
     return _ffi_api.DivToMul()
+
+
+
+def LabelOps():
+    return _ffi_api.LabelOps()

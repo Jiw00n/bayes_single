@@ -43,15 +43,27 @@ Note that this tutorial will not run on Windows or recent versions of macOS. To
 get it to run, you will need to wrap the body of this tutorial in a :code:`if
 __name__ == "__main__":` block.
 """
-
+import os
+ppath = os.environ.get("PYTHONPATH")
+buildpath = os.environ.get("TVM_LIBRARY_PATH")
+print("PYTHONPATH=", ppath)
+print("TVM_LIBRARY_PATH=", buildpath)
+if "release" in buildpath:
+    print("Release mode")
+else:
+    print("Debug mode")
 import numpy as np
 from datetime import datetime
 import tvm
+
+import tvm, tvm._ffi.libinfo as L, sys
+print("tvm.__file__ =", tvm.__file__)
+print("lib candidates =", L.find_lib_path())
+
 from tvm import relay, auto_scheduler
 import tvm.relay.testing
 from tvm.contrib import graph_executor
 from tvm.relay.testing.init import create_workload
-import os
 
 #################################################################
 # Define a Network
@@ -68,6 +80,8 @@ import os
 # You can use :ref:`ConvertLayout <convert-layout-usage>` pass to do the layout conversion in TVM.
 
 
+
+
 def get_network(name, batch_size, layout="NHWC", dtype="float32"):
     """Get the symbol definition and random weight of a network"""
 
@@ -82,8 +96,8 @@ def get_network(name, batch_size, layout="NHWC", dtype="float32"):
     input_shape = (batch_size,) + image_shape
     output_shape = (batch_size, 1000)
 
-    if name.startswith("resnet-"):
-        n_layer = int(name.split("-")[1])
+    if name.startswith("resnet_"):
+        n_layer = int(name.split("_")[1])
         mod, params = relay.testing.resnet.get_workload(
             num_layers=n_layer,
             batch_size=batch_size,
@@ -111,8 +125,8 @@ def get_network(name, batch_size, layout="NHWC", dtype="float32"):
         mod = transform.InferType()(mod)
         mod = transform.SimplifyInference()(mod)
 
-    elif name.startswith("resnet3d-"):
-        n_layer = int(name.split("-")[1])
+    elif name.startswith("resnet3d_"):
+        n_layer = int(name.split("_")[1])
         mod, params = relay.testing.resnet.get_workload(
             num_layers=n_layer,
             batch_size=batch_size,
@@ -157,25 +171,30 @@ parser = argparse.ArgumentParser(description="Ansor CUDA - Multiple Task Tuning"
 parser.add_argument("--network", type=str, help="Name of the network", default="tiny_conv_1")
 parser.add_argument("--batch_size", type=int, help="Batch size", default=1)
 parser.add_argument("--layout", type=str, help="Layout of the input data", default="NHWC")
+parser.add_argument("--measure", action="store_true", help="Whether to measure or not")
 args = parser.parse_args()
 
-time = datetime.now().strftime("%m%d_%H%M")
+
 network = args.network
 batch_size = args.batch_size
 layout = args.layout
+measure = args.measure
 
-# tiny_conv_1, tiny_res, resnet-18, resnet-50
-# network = "resnet-18"
+# tiny_conv_1, tiny_res, resnet_18, resnet_50
+# network = "tiny_conv_1"
 # batch_size = 1
 # layout = "NHWC"
 
 
 target = tvm.target.Target("cuda")
 dtype = "float32"
-os.makedirs(f"logs_schedule/multi_{network}", exist_ok=True)
-log_file = f"logs_schedule/multi_{network}/multi_{network}-B{batch_size}-{time}.json"
-# log_file = f"logs_schedule/multi_{network}/multi_tiny_conv_1-B1-0812_1124.json"
-# log_file = f"logs_schedule/multi_{network}/resnet-18.json"
+os.makedirs(f"logs_schedule/multi-{network}", exist_ok=True)
+if measure:
+    time = datetime.now().strftime("%m%d-%H%M")
+    log_file = f"logs_schedule/multi-{network}/{network}-B{batch_size}-{time}.json"
+else:
+    log_file = f"logs_schedule/multi-{network}/{network}-B{batch_size}.json"
+# log_file = f"logs_schedule/multi-{network}/multi_tiny_conv_1-B1-0812_1124.json"
 
 #################################################################
 # Extract Search Tasks
@@ -193,12 +212,16 @@ print("Extract tasks...")
 mod, params, input_shape, output_shape = get_network(network, batch_size, layout, dtype=dtype)
 print(mod)
 breakpoint()
-if os.path.exists(f"pkl/{network}.pkl"):
-    import pickle
-    with open("pkl/"+network+".pkl", "rb") as f:
+
+import pickle
+if os.path.exists(f"tasks_pkl/{network}.pkl"):
+    with open(f"tasks_pkl/{network}.pkl", "rb") as f:
         tasks, task_weights = pickle.load(f)
 else:
     tasks, task_weights = auto_scheduler.extract_tasks(mod["main"], params, target)
+    os.makedirs("tasks_pkl", exist_ok=True)
+    with open(f"tasks_pkl/{network}.pkl", "wb") as f:
+        pickle.dump((tasks, task_weights), f)
 
 for idx, task in enumerate(tasks):
     print("========== Task %d  (workload key: %s) ==========" % (idx, task.workload_key))
@@ -232,7 +255,7 @@ for idx, task in enumerate(tasks):
 def run_tuning():
     print("Begin tuning...")
     measure_ctx = auto_scheduler.LocalRPCMeasureContext(repeat=1, min_repeat_ms=300, timeout=10)
-
+    
     tuner = auto_scheduler.TaskScheduler(tasks, task_weights)
     tune_option = auto_scheduler.TuningOptions(
         num_measure_trials=100,  # change this to 20000 to achieve the best performance
@@ -246,7 +269,7 @@ def run_tuning():
 # We do not run the tuning in our webpage server since it takes too long.
 # Uncomment the following line to run it by yourself.
 
-run_tuning()
+# run_tuning()
 
 
 ######################################################################

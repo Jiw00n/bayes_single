@@ -138,6 +138,9 @@ Pass LabelOps() {
   return CreateFunctionPass(pass_func, 1, "LabelOps", {});
 }
 
+
+TVM_REGISTER_GLOBAL("relay._transform.LabelOps").set_body_typed(LabelOps);
+
 }  // namespace transform
 }  // namespace relay
 }  // namespace tvm
