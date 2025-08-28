@@ -1,0 +1,6 @@
+ElapsedTime(s)	27	EstimatedLatency(ms)	N/A	Trials	5
+ElapsedTime(s)	63	EstimatedLatency(ms)	N/A	Trials	30
+ElapsedTime(s)	95	EstimatedLatency(ms)	N/A	Trials	55
+ElapsedTime(s)	212	EstimatedLatency(ms)	0.025	Trials	80
+ElapsedTime(s)	216	EstimatedLatency(ms)	0.025	Trials	80
+ElapsedTime(s)	336	EstimatedLatency(ms)	0.025	Trials	105
