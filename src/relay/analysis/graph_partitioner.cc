@@ -466,5 +466,11 @@ void GraphPartitioner::RunFuse(const IndexedForwardGraph& graph,    //
   }
 }
 
+
+void _DebugDumpIndexedFG(const IndexedForwardGraph& g) {
+  g.DebugDump();
+}
+
+
 }  // namespace relay
 }  // namespace tvm
